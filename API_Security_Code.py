@@ -41,7 +41,6 @@ def get_security_info(page_number):
         print(api_request.status_code)
         json_response = api_request.json()
         if page_number == 1:
-            if 
             total_pages = json_response['result']['pages']
             print("Total pages:", total_pages)
             #all_data = json_response['result']['data']
