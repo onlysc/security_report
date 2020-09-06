@@ -69,9 +69,19 @@ def data_check(response):
 
 #get_security_info(page_number)
 
+def update_db():
+    i = 0
+    for document in code_info.find():
+        document["num"] = i
+        print("已添加股票代码的索引:", document['SECURITY_CODE'], i)
+        i += 1
+
+#update_db()
+
 for result in code_info.find():
     security_code = result['SECURITY_CODE']
-    print("准备获取的股票代码为:", security_code)
+    index = result['num']
+    print("准备获取的股票代码和索引号为:", security_code, index)
     for report_table in table_name:
         url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=1&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
         print("准备获取股票的", table2sheet_name[report_table])
