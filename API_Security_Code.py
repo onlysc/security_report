@@ -74,43 +74,45 @@ def update_db():
     for document in code_info.find():
         document["num"] = i
         print("已添加股票代码的索引:", document['SECURITY_CODE'], i)
+        time.sleep(10)
         i += 1
 
 #update_db()
 #print(code_info.count_documents())
-with code_info.find(no_cursor_timeout=True) as cursor:
-    for result in cursor:
-        security_code = result['SECURITY_CODE']
-        index = int(result['num'])
-        print("准备获取的股票代码和索引号为:", security_code, index)
-        for report_table in table_name:
-            url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=1&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
-            print("准备获取股票的", table2sheet_name[report_table])
-            print("获取股票财报链接总页数,链接:", url)
-            items_num_request = requests.get(url)
-            time.sleep(5)
-            if items_num_request.status_code == 200:
-                items_num_response = items_num_request.json()
-                if data_check(items_num_response):
-                    print('已成功获取报表数据:', table2sheet_name[report_table])
-                else:
-                    continue
-                total_pages = items_num_response['result']['pages']
-                print("已经获取到的股票财报条目数:", total_pages)
-                url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=" + str(total_pages) + "&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
-                print("获取财报信息,链接:", url)
-                api_request = requests.get(url)
+for i in range(0, 4002):
+    with code_info.find({"num":{"$gte":(i*101)}}, no_cursor_timeout=True) as cursor:
+        for result in cursor:
+            security_code = result['SECURITY_CODE']
+            index = int(result['num'])
+            print("准备获取的股票代码和索引号为:", security_code, index)
+            for report_table in table_name:
+                url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=1&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
+                print("准备获取股票的", table2sheet_name[report_table])
+                print("获取股票财报链接总页数,链接:", url)
+                items_num_request = requests.get(url)
                 time.sleep(5)
-                print("----------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-                if api_request.status_code == 200:
-                    json_response = api_request.json()
-                    data_list = json_response['result']['data']
-                    mongo_client['security'][table2db_name[report_table]].insert_many(data_list)
-                    print("数据库写入完成：", security_code, [table2db_name[report_table]])
+                if items_num_request.status_code == 200:
+                    items_num_response = items_num_request.json()
+                    if data_check(items_num_response):
+                        print('已成功获取报表数据:', table2sheet_name[report_table])
+                    else:
+                        continue
+                    total_pages = items_num_response['result']['pages']
+                    print("已经获取到的股票财报条目数:", total_pages)
+                    url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=" + str(total_pages) + "&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
+                    print("获取财报信息,链接:", url)
+                    api_request = requests.get(url)
+                    time.sleep(5)
+                    if api_request.status_code == 200:
+                        json_response = api_request.json()
+                        data_list = json_response['result']['data']
+                        mongo_client['security'][table2db_name[report_table]].insert_many(data_list)
+                        print("数据库写入完成，股票代码&报表类别为：", security_code, [table2db_name[report_table]])
+                    else:
+                        error_security.append(security_code)
+                        # excel_write()
                 else:
-                    error_security.append(security_code)
-                    # excel_write()
-            else:
-                error_pages.append(security_code)
+                    error_pages.append(security_code)
+            print("--------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
     print("Error Security Code's ", table2sheet_name[report_table], error_security)
     print("Error! When Getting Security Code's Total Pages, Code Numbers Are:", error_pages)
