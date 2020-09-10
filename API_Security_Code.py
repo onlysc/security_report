@@ -78,8 +78,9 @@ def update_db():
         i += 1
 
 #update_db()
-#print(code_info.count_documents())
-for i in range(0, 4002):
+count = code_info.count_documents({})
+n = count/101 + 1
+for i in range(0, n):
     with code_info.find({"num":{"$gte":(i*101)}}, no_cursor_timeout=True) as cursor:
         for result in cursor:
             security_code = result['SECURITY_CODE']
