@@ -1,6 +1,7 @@
 import requests
 import pandas
 import time
+import math
 from pymongo import MongoClient
 
 table_name = ['RPT_DMSK_FN_INCOME', 'RPT_DMSK_FN_CASHFLOW', 'RPT_DMSK_FN_BALANCE', 'RPT_LICO_FN_CPD']
@@ -68,6 +69,7 @@ def data_check(response):
         print("Unknow Type of return data.")
 
 #get_security_info(page_number)
+#该函数从财务简报API中获得所有A股股票基本数据，主要目的得到股票代码
 
 def update_db():
     i = 0
@@ -79,13 +81,14 @@ def update_db():
 
 #update_db()
 count = code_info.count_documents({})
-n = count/101 + 1
+n = math.ceil(count/101) + 1
+#取得股票数据数量后向上取证，mongodb的游标101限制，需要分页取回数据
 for i in range(0, n):
     with code_info.find({"num":{"$gte":(i*101)}}, no_cursor_timeout=True) as cursor:
         for result in cursor:
             security_code = result['SECURITY_CODE']
             index = int(result['num'])
-            print("准备获取的股票代码和索引号为:", security_code, index)
+            print("准备获取的股票代码/索引号/循环号为:", security_code, index, i)
             for report_table in table_name:
                 url = "http://datacenter.eastmoney.com/api/data/get?type=" + report_table + "&sty=ALL&p=1&ps=1&st=" + report_date_form[report_table] + "&sr=1&filter=(SECURITY_CODE=%22" + security_code + "%22)"
                 print("准备获取股票的", table2sheet_name[report_table])
