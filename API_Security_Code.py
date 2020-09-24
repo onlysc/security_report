@@ -72,6 +72,7 @@ def check_dup(sec_dbpage_nums_v, dbname_v): #TODO make this finished #检查数�
     collections_list = ['income', 'cash', 'balance', 'performance']
     code_info = dbname_v['codeinfo']
     excel_dupfile_name = 'dup_doc.xlsx'
+    all_data = []
     for i in range(0, sec_dbpage_nums_v):
         with code_info.find({'$and':[{'num':{'$exists':True}}, {'num':{'$gte':(i*101), '$lte':((i+1)*101)}}]}, no_cursor_timeout = True) as cursor:
             for result in cursor:
@@ -83,7 +84,7 @@ def check_dup(sec_dbpage_nums_v, dbname_v): #TODO make this finished #检查数�
                     for dup_info in dup_info_cursor:
                         if dup_info['count'] > 1:
                             print(dup_info)
-                        all_data = all_data + dup_info
+                            all_data.append(dup_info)
     excel_write(excel_dupfile_name, '重复文档列表', all_data)
 
 def update_db():
@@ -142,4 +143,4 @@ sec_dbpage_nums = math.ceil(sec_db_nums/101) + 1
 check_dup(sec_dbpage_nums, dbname)
 #取得股票数量后向上取整，mongodb的游标101限制，需要分页取回数据
 #update_db()
-#get_finace_report(sec_dbpage_nums, mongo_client)
+#get_finace_report(sec_dbpage_nums, dbname, table2db_name)
