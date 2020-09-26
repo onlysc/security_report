@@ -83,6 +83,7 @@ def check_dup(sec_dbpage_nums_v, dbname_v): #TODO make this finished #检查数�
                     #注意业绩报表的报告日期条目REPORT_DATE、REPORTDATE！！！！！
                     for dup_info in dup_info_cursor:
                         if dup_info['count'] > 1:
+                            dup_info['col'] = collection_name
                             print(dup_info)
                             all_data.append(dup_info)
     excel_write(excel_dupfile_name, '重复文档列表', all_data)
